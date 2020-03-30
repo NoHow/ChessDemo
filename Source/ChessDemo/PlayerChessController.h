@@ -11,7 +11,7 @@ class UChessAI;
 class UBoardCell;
 class AChessBoard;
 
-UCLASS()
+UCLASS(Blueprintable)
 class CHESSDEMO_API APlayerChessController : public APlayerController
 {
 	GENERATED_BODY()
@@ -28,7 +28,7 @@ public:
     void SetBoard(AChessBoard* board);
 
     UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Game")
-    void FinishGame(ChessTeam winner);
+    void FinishChessGame(bool isPlayerWin);
 private:
     void ProcessClick(UBoardCell* cell, AFigureBase* figure);
 

@@ -20,6 +20,8 @@ AKingFigure::AKingFigure()
 	{
 		whiteInstance = WhiteFigureAsset.Object;
 	}
+
+	mFigureValue = 10.f;
 }
 
 bool AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)

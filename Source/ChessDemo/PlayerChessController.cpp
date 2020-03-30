@@ -77,7 +77,7 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         }
     }
     //If there are no active figures - make this one active
-    else if(figure)
+    else if(figure && figure->GetTeam() == ChessTeam::White)
     {
         if (figure->GetTeam() == mCurrentPlayer)
         {

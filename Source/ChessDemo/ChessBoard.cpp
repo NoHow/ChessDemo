@@ -126,7 +126,7 @@ void AChessBoard::KillFigure(AFigureBase* figure)
 		cell->SetFigure(nullptr);
 	}
 
-	if (figure->StaticClass() == AKingFigure::StaticClass())
+	if (Cast<AKingFigure>(figure))
 	{
 		UWorld* world = GetWorld();
 		APlayerChessController* controller = nullptr;
@@ -139,11 +139,11 @@ void AChessBoard::KillFigure(AFigureBase* figure)
 		{
 			if (figure->GetTeam() == ChessTeam::Dark)
 			{
-				controller->FinishGame(ChessTeam::White);
+				controller->FinishChessGame(true);
 			}
 			else
 			{
-				controller->FinishGame(ChessTeam::Dark);
+				controller->FinishChessGame(false);
 			}
 		}
 	}
