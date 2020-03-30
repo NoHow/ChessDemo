@@ -1,0 +1,28 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "FigureBase.h"
+#include "PawnFigure.generated.h"
+
+class UBoardCell;
+
+UCLASS()
+class CHESSDEMO_API APawnFigure : public AFigureBase
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	APawnFigure();
+
+	bool MoveTo(UBoardCell* newCell) override;
+	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
+	
+private:
+	bool CheckCellForEnemy(TPair<uint8, uint8> cellPosition) const;
+
+private:
+	bool mFirstMove = true;
+};
