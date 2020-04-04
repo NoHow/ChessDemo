@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/StaticMesh.h"
+#include "Containers/Array.h"
+#include "Kismet/KismetMathLibrary.h" 
 #include "PlayerChessController.h"
 #include "BoardCell.h"
 
@@ -116,10 +118,7 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 	}
 
 	TArray<TPair<int32, int32>> moves;
-	if (!GetPossibleMoves(moves))
-	{
-		return false;
-	}
+	GetPossibleMoves(moves);
 
 	const TPair<uint8, uint8>& position = newCell->GetBoardPosition();
 
@@ -195,7 +194,7 @@ void AFigureBase::SetTeam(ChessTeam newTeam)
 	mCurrentTeam = newTeam;
 }
 
-bool AFigureBase::CheckCellForFigure(TPair<uint8, uint8> cellPosition) const
+bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure) const
 {
 	if (!mChessBoard)
 	{
@@ -208,26 +207,7 @@ bool AFigureBase::CheckCellForFigure(TPair<uint8, uint8> cellPosition) const
 		AFigureBase* checkFigure = checkCell->GetFigure();
 		if (checkFigure)
 		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition) const
-{
-	if (!mChessBoard)
-	{
-		return false;
-	}
-
-	UBoardCell* checkCell = mChessBoard->GetCell(cellPosition);
-	if (checkCell)
-	{
-		AFigureBase* checkFigure = checkCell->GetFigure();
-		if (checkFigure)
-		{
+			isThereFigure = true;
 			if (checkFigure->GetTeam() != mCurrentTeam)
 			{
 				return true;
@@ -239,9 +219,101 @@ bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition) const
 		}
 		else
 		{
+			isThereFigure = false;
 			return true;
 		}
 	}
 
 	return false;
+}
+
+void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLimit) const
+{
+	check(mCurrentCell && mChessBoard);
+
+	auto cellPosition = mCurrentCell->GetBoardPosition();
+	const uint8 currentRow = cellPosition.Key;
+	const uint8 currentColumn = cellPosition.Value;
+
+	auto checkCellPosition = TPair<uint8, uint8>(currentRow, currentColumn);
+	UBoardCell* checkCell = nullptr;
+
+	for (uint8 index = 0; index < mCheckDirections.Num(); ++index)
+	{
+		checkCellPosition.Key = currentRow + mCheckDirections[index].Key;
+		checkCellPosition.Value = currentColumn + mCheckDirections[index].Value;
+
+		checkCell = mChessBoard->GetCell(checkCellPosition);
+
+		uint8 checkCounter = 0;
+		while (checkCell && checkCounter++ < checkLimit)
+		{
+			bool isThereFigure = false;
+			if (!CanMoveToCell(checkCellPosition, isThereFigure))
+			{
+				break;
+			}
+			moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+
+			if (isThereFigure)
+			{
+				break;
+			}
+
+			checkCellPosition.Key += mCheckDirections[index].Key;
+			checkCellPosition.Value += mCheckDirections[index].Value;
+
+			checkCell = mChessBoard->GetCell(checkCellPosition);
+		}
+	}
+}
+
+void AFigureBase::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+{
+	GetMovesBase(moves);
+}
+
+UBoardCell* AFigureBase::FindBestMove()
+{
+	check(mChessBoard);
+	TArray<TPair<int32, int32>> moves;
+	GetPossibleMoves(moves);
+
+	if (moves.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	float maxValue = FLT_MIN;
+	UBoardCell* bestMove = nullptr;
+
+	for (const auto& move : moves)
+	{
+		UBoardCell* cell = mChessBoard->GetCell(TPair<uint8, uint8>(move.Key, move.Value));
+		if (!cell)
+		{
+			continue;
+		}
+
+		AFigureBase* valueFrom = cell->GetFigure();
+		if (!valueFrom)
+		{
+			continue;
+		}
+
+		const float figureValue = valueFrom->GetFigureValue();
+		if (figureValue > maxValue)
+		{
+			bestMove = cell;
+			maxValue = figureValue;
+		}
+	}
+
+	if (!bestMove)
+	{
+		auto& randomMove = moves[UKismetMathLibrary::RandomInteger(moves.Num())];
+		bestMove = mChessBoard->GetCell(TPair<uint8, uint8>(randomMove.Key, randomMove.Value));
+	}
+
+	return bestMove;
 }

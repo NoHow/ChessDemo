@@ -28,13 +28,10 @@ APawnFigure::APawnFigure()
 	mFigureValue = 1.f;
 }
 
-bool APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
-	if (!ensure(mCurrentCell))
-	{
-		return false;
-	}
-	
+	check(mCurrentCell);
+
 	auto cellPosition = mCurrentCell->GetBoardPosition();
 	const uint8 currentRow = cellPosition.Key;
 	const uint8 currentColumn = cellPosition.Value;
@@ -44,31 +41,25 @@ bool APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 	{
 		teamDirection = -1;
 	}
-	else if(mCurrentTeam == ChessTeam::White)
+	else if (mCurrentTeam == ChessTeam::White)
 	{
 		teamDirection = 1;
 	}
-	else
-	{
-		return false;
-	}
 
-	const uint8 cellChecks = 2;
-	for (int index = 1; index <= cellChecks; index++)
+	uint8 forwardCell = 1 * teamDirection;
+	int8 checkCellRow = currentRow + forwardCell;
+	if (!CheckCellForFigure(TPair<uint8, uint8>(checkCellRow, currentColumn)))
 	{
-		const int8 checkCellRow = currentRow + index * teamDirection;
-		if(!CheckCellForFigure(TPair<uint8, uint8>(checkCellRow, currentColumn)))
-		{
-			moves.Add(TPair<int32, int32>(checkCellRow, currentColumn));
-		}
-		else
-		{
-			break;
-		}
+		moves.Add(TPair<int32, int32>(checkCellRow, currentColumn));
 
-		if (!mFirstMove)
+		if (mFirstMove)
 		{
-			break;
+			forwardCell += teamDirection;
+			checkCellRow = currentRow + forwardCell;
+			if (!CheckCellForFigure(TPair<uint8, uint8>(checkCellRow, currentColumn)))
+			{
+				moves.Add(TPair<int32, int32>(checkCellRow, currentColumn));
+			}
 		}
 	}
 
@@ -83,8 +74,6 @@ bool APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 	{
 		moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
 	}
-
-	return true;
 }
 
 bool APawnFigure::MoveTo(UBoardCell* newCell)
@@ -123,6 +112,26 @@ bool APawnFigure::CheckCellForEnemy(TPair<uint8, uint8> cellPosition) const
 			{
 				return false;
 			}
+		}
+	}
+
+	return false;
+}
+
+bool APawnFigure::CheckCellForFigure(TPair<uint8, uint8> cellPosition) const
+{
+	if (!mChessBoard)
+	{
+		return false;
+	}
+
+	UBoardCell* checkCell = mChessBoard->GetCell(cellPosition);
+	if (checkCell)
+	{
+		AFigureBase* checkFigure = checkCell->GetFigure();
+		if (checkFigure)
+		{
+			return true;
 		}
 	}
 

@@ -17,5 +17,5 @@ class CHESSDEMO_API AKnightFigure : public AFigureBase
 public:
 	AKnightFigure();
 
-	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
+	void GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
 };

@@ -16,6 +16,4 @@ class CHESSDEMO_API ARookFigure : public AFigureBase
 	
 public:
 	ARookFigure();
-
-	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
 };

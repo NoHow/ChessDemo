@@ -18,10 +18,11 @@ public:
 	APawnFigure();
 
 	bool MoveTo(UBoardCell* newCell) override;
-	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
+	void GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
 	
 private:
 	bool CheckCellForEnemy(TPair<uint8, uint8> cellPosition) const;
+	bool CheckCellForFigure(TPair<uint8, uint8> cellPosition) const;
 
 private:
 	bool mFirstMove = true;

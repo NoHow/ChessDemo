@@ -69,7 +69,7 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
             
             mCurrentPlayer = ChessTeam::Dark;
         }
-        else if(figure)
+        else if(figure && m_ActiveFigure->GetTeam() == figure->GetTeam())
         {
             m_ActiveFigure->LiftDown();
             m_ActiveFigure = figure;

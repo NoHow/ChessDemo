@@ -15,6 +15,7 @@
 #include "DrawDebugHelpers.h"
 #include "BoardCell.h"
 #include "PlayerChessController.h"
+#include "Containers/Array.h"
 
 // Sets default values
 AChessBoard::AChessBoard()
@@ -31,21 +32,19 @@ AChessBoard::AChessBoard()
 
 	check(m_MeshComponent);
 
-	size_t counter = 0;
-	for (auto& row : mCells)
+	for(uint8 rowIndex = 0; rowIndex < mCells.Num(); rowIndex++)
 	{
-		for (auto& cell : row)
+		for(uint8 columnIndex = 0; columnIndex < mCells[rowIndex].Num(); columnIndex++)
 		{
-			FString name = "cell" + FString::FromInt(counter);
-			cell = CreateDefaultSubobject<UBoardCell>(*name);
-			counter++;
+			FString name = "cell" + FString::FromInt(rowIndex) + FString::FromInt(columnIndex);
+			mCells[rowIndex][columnIndex] = CreateDefaultSubobject<UBoardCell>(*name);
 		}
 	}
 
 	SetRootComponent(Cast<USceneComponent>(m_MeshComponent));
 }
 
-// Called when the game s	tarts or when spawned
+// Called when the game starts or when spawned
 void AChessBoard::BeginPlay()
 {
 	Super::BeginPlay();
@@ -73,16 +72,16 @@ void AChessBoard::Tick(float DeltaTime)
 
 void AChessBoard::FillTheBoard()
 {
-	SpawnFigure<APawnFigure>(2, 1);
-	SpawnFigure<APawnFigure>(2, 2);
-	SpawnFigure<APawnFigure>(2, 3);
-	SpawnFigure<APawnFigure>(2, 4);
+	AddFigureToBoard(APawnFigure::StaticClass(), 2, 1);
+	AddFigureToBoard(APawnFigure::StaticClass(), 2, 2);
+	AddFigureToBoard(APawnFigure::StaticClass(), 2, 3);
+	AddFigureToBoard(APawnFigure::StaticClass(), 2, 4);
 
-	SpawnFigure<ARookFigure>(1, 1);
-	SpawnFigure<AKnightFigure>(1, 2, 90.f);
-	SpawnFigure<ABishopFigure>(1, 3);
-	SpawnFigure<AQueenFigure>(1, 4, 0, false);
-	SpawnFigure<AKingFigure>(1, 5, 0, false);
+	AddFigureToBoard(ARookFigure::StaticClass(), 1, 1);
+	AddFigureToBoard(AKnightFigure::StaticClass(), 1, 2, 90.f);
+	AddFigureToBoard(ABishopFigure::StaticClass(), 1, 3);
+	AddFigureToBoard(AQueenFigure::StaticClass(), 1, 4, 0, false);
+	AddFigureToBoard(AKingFigure::StaticClass(), 1, 5, 0, false);
 }
 
 
@@ -94,21 +93,21 @@ void AChessBoard::InitBoard()
 	const FVector cellSize = FVector{ meshBoardSize.X / cellAmount, meshBoardSize.Y / cellAmount, meshBoardSize.Z };
 
 	const FVector offSet = cellSize / 2.f;
-	const FVector startingPoint = GetActorLocation() - FVector{ meshBoardSize.X / 2.f, meshBoardSize.Y / 2.f, meshBoardSize.Z } -offSet;
-	uint8 i = 1;
-	for (auto& row : mCells)
-	{
-		uint8 j = 1;
-		for (auto& cell : row)
-		{
-			cell->SetBoardPosition(TPair<uint8, uint8>(i, j));
-			cell->InitBoxExtent(FVector{ cellSize.X / 2.f, cellSize.Y / 2.f, 1.f });
+	const FVector startingPoint = GetActorLocation() - FVector{ meshBoardSize.X / 2.f, meshBoardSize.Y / 2.f, meshBoardSize.Z } - offSet;
 
-			const FVector cellOffset = FVector{ cellSize.X * i, cellSize.Y * j, meshBoardSize.Z * 2.f };
-			cell->SetWorldLocation(startingPoint + cellOffset);
-			++j;
+	for(uint8 rowIndex = 0; rowIndex < mCells.Num(); ++rowIndex)
+	{
+		for(uint8 columnIndex = 0; columnIndex < mCells[rowIndex].Num(); ++columnIndex)
+		{
+			const uint8 offsetRow = rowIndex + 1u;
+			const uint8 offsetColumn = columnIndex + 1u;
+
+			mCells[rowIndex][columnIndex]->SetBoardPosition(TPair<uint8, uint8>(offsetRow, offsetColumn));
+			mCells[rowIndex][columnIndex]->InitBoxExtent(FVector{ cellSize.X / 2.f, cellSize.Y / 2.f, 1.f });
+
+			const FVector cellOffset = FVector{ cellSize.X * offsetRow, cellSize.Y * offsetColumn, meshBoardSize.Z * 2.f };
+			mCells[rowIndex][columnIndex]->SetWorldLocation(startingPoint + cellOffset);
 		}
-		++i;
 	}
 
 }
@@ -160,4 +159,61 @@ UBoardCell* AChessBoard::GetCell(const TPair<uint8, uint8>& position)
 	}
 
 	return mCells[row][column];
+}
+
+bool AChessBoard::AddFigureToBoard(UClass* figureClass, uint8 row, uint8 column, float rotation , bool twoCopies)
+{
+	const uint8 boardBounds = 9;
+	TArray<TPair<uint8, uint8>> spawnPositions;
+	spawnPositions.Reserve(4);
+
+	spawnPositions.Add(TPair<uint8, uint8>(row, column));
+	spawnPositions.Add(TPair<uint8, uint8>(boardBounds - row, column));
+	if (twoCopies)
+	{
+		spawnPositions.Add(TPair<uint8, uint8>(row, boardBounds - column));
+		spawnPositions.Add(TPair<uint8, uint8>(boardBounds - row, boardBounds - column));
+	}
+
+	for (const auto& spawn : spawnPositions)
+	{
+		UBoardCell* spawnCell = GetCell(spawn);
+		ChessTeam spawnTeam = ChessTeam::Dark;
+		float spawnRotation = rotation;
+		if (spawn.Key <= 4)
+		{
+			spawnTeam = ChessTeam::White;
+			spawnRotation *= -1;
+		}
+		
+		ensureAlways(CreateFigure(figureClass, spawnCell, spawnTeam, spawnRotation));
+	}
+
+	return true;
+}
+
+bool AChessBoard::CreateFigure(UClass* figureClass, UBoardCell* spawnCell, ChessTeam team, float rotation)
+{
+	UWorld* world = GetWorld();
+	if (!world || !figureClass->IsChildOf(AFigureBase::StaticClass()))
+	{
+		return false;
+	}
+
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	const FVector spawnLocation = spawnCell->GetComponentLocation();
+	AFigureBase* figure = Cast<AFigureBase>(world->SpawnActor(figureClass, &spawnLocation, &FRotator::ZeroRotator, spawnParams));
+	if (!figure)
+	{
+		return false;
+	}
+
+	figure->Init(team, spawnCell, this);
+	figure->SetActorRotation(FRotator{ 0, rotation, 0 }, ETeleportType::TeleportPhysics);
+
+	spawnCell->SetFigure(figure);
+	
+	return true;
 }

@@ -16,6 +16,4 @@ class CHESSDEMO_API AQueenFigure : public AFigureBase
 	
 public:
 	AQueenFigure();
-
-	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
 };

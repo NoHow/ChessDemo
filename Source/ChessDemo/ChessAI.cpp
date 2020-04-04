@@ -40,31 +40,16 @@ void UChessAI::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 //move with higher figure value (not taking into account figure position)
 void UChessAI::ScanBoard(AChessBoard* board)
 {
-	if (!ensure(board))
-	{
-		return;
-	}
+	check(board);
 
-	//Map used to select random move for random figure if didn't found best move
-	TMap<AFigureBase*, TPair<int32, int32>> allFigures;
-
-	float maxValue = FLT_MIN;
-	UBoardCell* bestMove = nullptr;
-	AFigureBase* bestFigure = nullptr;
-
+	TMap<AFigureBase*, UBoardCell*> bestMoves;
 	const uint8 boardLimit = 9;
-	TArray<TPair<int32, int32>> moves;
-	const size_t expectedMaxMoves = 64;
-	moves.Reserve(expectedMaxMoves);
 	for (uint8 row = 1; row < boardLimit; row++)
 	{
 		for (uint8 column = 1; column < boardLimit; column++)
 		{
 			UBoardCell* boardCell = board->GetCell(TPair<uint8, uint8>(row, column));
-			if (!ensure(boardCell))
-			{
-				continue;
-			}
+			check(boardCell);
 
 			AFigureBase* figure = boardCell->GetFigure();
 			if (!figure)
@@ -74,42 +59,35 @@ void UChessAI::ScanBoard(AChessBoard* board)
 
 			if (figure->GetTeam() == mAITeam)
 			{
-				if (figure->GetPossibleMoves(moves))
+				UBoardCell* currentBestMove = figure->FindBestMove();
+				if (currentBestMove)
 				{
-					if (moves.Num() == 0)
-					{
-						continue;
-					}
-					auto& randomMove = moves[UKismetMathLibrary::RandomInteger(moves.Num())];
-					allFigures.Add(figure, randomMove);
-
-					for (const auto& move : moves)
-					{
-						UBoardCell* cell = board->GetCell(TPair<uint8, uint8>(move.Key, move.Value));
-						if (!cell)
-						{
-							continue;
-						}
-
-						AFigureBase* valueFrom = cell->GetFigure();
-						if (!valueFrom)
-						{
-							continue;
-						}
-
-						const float figureValue = valueFrom->GetFigureValue();
-						if (figureValue > maxValue)
-						{
-							bestMove = cell;
-							bestFigure = figure;
-							maxValue = figureValue;
-						}
-					}
+					bestMoves.Add(figure, currentBestMove);
 				}
-
 			}
+		}
+	}
 
-			moves.Reset(expectedMaxMoves);
+	UBoardCell* bestMove = nullptr;
+	AFigureBase* bestFigure = nullptr;
+	float maxValue = FLT_MIN;
+	for (const auto& it : bestMoves)
+	{
+		AFigureBase* currentFigure = it.Value;
+		UBoardCell* currentMove = it.Key;
+
+		AFigureBase* valueFrom = currentFigure->GetFigure();
+		if (!valueFrom)
+		{
+			continue;
+		}
+
+		const float figureValue = currentFigure->GetFigureValue() + valueFrom->GetFigureValue();
+		if (figureValue > maxValue)
+		{
+			bestMove = currentMove;
+			bestFigure = currentFigure;
+			maxValue = figureValue;
 		}
 	}
 
@@ -120,28 +98,15 @@ void UChessAI::ScanBoard(AChessBoard* board)
 	}
 	else
 	{
-		size_t counter = 0;
-		size_t randomIndex = UKismetMathLibrary::RandomInteger(allFigures.Num());
-		for (const auto& it : allFigures)
-		{
-			if (counter == randomIndex)
-			{
-				AFigureBase* moveFigure = it.Key;
-				if (moveFigure)
-				{
-					TPair<uint8, uint8> cellLocation{ it.Value.Key, it.Value.Value };
-					UBoardCell* cell = board->GetCell(cellLocation);
-					if (ensure(cell))
-					{
-						moveFigure->MoveTo(cell);
-						cell->SetFigure(moveFigure);
-					}
-				}
+		TArray<AFigureBase*> mKeyArray;
+		bestMoves.GenerateKeyArray(mKeyArray);
+		
+		size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
+		
+		AFigureBase* randFigure = mKeyArray[randomIndex];
+		auto randMove = bestMoves.Find(randFigure);
 
-				break;
-			}
-			counter++;
-		}
-
+		randFigure->MoveTo(*randMove);
+		(*randMove)->SetFigure(randFigure);
 	}
 }

@@ -22,41 +22,19 @@ AKingFigure::AKingFigure()
 	}
 
 	mFigureValue = 10.f;
+
+	mCheckDirections.Reserve(8);
+	mCheckDirections.Emplace(1, 0);
+	mCheckDirections.Emplace(-1, 0);
+	mCheckDirections.Emplace(0, 1);
+	mCheckDirections.Emplace(0, -1);
+	mCheckDirections.Emplace(1, 1);
+	mCheckDirections.Emplace(-1, 1);
+	mCheckDirections.Emplace(1, -1);
+	mCheckDirections.Emplace(-1, -1);
 }
 
-bool AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
-	if (!ensure(mCurrentCell) && !ensure(mChessBoard))
-	{
-		return false;
-	}
-
-	auto cellPosition = mCurrentCell->GetBoardPosition();
-	const uint8 currentRow = cellPosition.Key;
-	const uint8 currentColumn = cellPosition.Value;
-
-	auto checkCellPosition = TPair<uint8, uint8>(currentRow, currentColumn);
-	UBoardCell* checkCell = nullptr;
-	TArray<TPair<int32, int32>> checkDirections;
-	checkDirections.Emplace(TPair<int32, int32>(1, 0));
-	checkDirections.Emplace(TPair<int32, int32>(-1, 0));
-	checkDirections.Emplace(TPair<int32, int32>(0, 1));
-	checkDirections.Emplace(TPair<int32, int32>(0, -1));
-	checkDirections.Emplace(TPair<int32, int32>(1, 1));
-	checkDirections.Emplace(TPair<int32, int32>(-1, 1));
-	checkDirections.Emplace(TPair<int32, int32>(1, -1));
-	checkDirections.Emplace(TPair<int32, int32>(-1, -1));
-
-	for (const auto& direction : checkDirections)
-	{
-		checkCellPosition.Key = currentRow + direction.Key;
-		checkCellPosition.Value = currentColumn + direction.Value;
-
-		if (CanMoveToCell(checkCellPosition))
-		{
-			moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
-		}
-	}
-
-	return true;
+	GetMovesBase(moves, 1);
 }

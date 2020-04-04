@@ -22,37 +22,35 @@ AKnightFigure::AKnightFigure()
 	}
 
 	mFigureValue = 3.f;
+
+	mCheckDirections.Reserve(8);
+	mCheckDirections.Emplace(2, 1);
+	mCheckDirections.Emplace(1, 2);
+	mCheckDirections.Emplace(-2, 1);
+	mCheckDirections.Emplace(-1, 2);
+	mCheckDirections.Emplace(2, -1);
+	mCheckDirections.Emplace(1, -2);
+	mCheckDirections.Emplace(-2, -1);
+	mCheckDirections.Emplace(-1, -2);
 }
 
-bool AKnightFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void AKnightFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
-	if (!ensure(mCurrentCell) && !ensure(mChessBoard))
-	{
-		return false;
-	}
+	//check(mChessBoard && mCurrentCell);
 
-	auto cellPosition = mCurrentCell->GetBoardPosition();
-	const uint8 currentRow = cellPosition.Key;
-	const uint8 currentColumn = cellPosition.Value;
+	//auto cellPosition = mCurrentCell->GetBoardPosition();
+	//const uint8 currentRow = cellPosition.Key;
+	//const uint8 currentColumn = cellPosition.Value;
 
-	TArray<TPair<int32, int32>> checkDirections;
-	checkDirections.Emplace(TPair<int32, int32>(2, 1));
-	checkDirections.Emplace(TPair<int32, int32>(1, 2));
-	checkDirections.Emplace(TPair<int32, int32>(-2, 1));
-	checkDirections.Emplace(TPair<int32, int32>(-1, 2));
-	checkDirections.Emplace(TPair<int32, int32>(2, -1));
-	checkDirections.Emplace(TPair<int32, int32>(1, -2));
-	checkDirections.Emplace(TPair<int32, int32>(-2, -1));
-	checkDirections.Emplace(TPair<int32, int32>(-1, -2));
+	//for (const auto& direction : mCheckDirections)
+	//{
+	//	auto checkCellPosition = TPair<uint8, uint8>(currentRow + direction.Key, currentColumn + direction.Value);
+	//	bool isThereFigure = false;
+	//	if (CanMoveToCell(checkCellPosition, isThereFigure))
+	//	{
+	//		moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+	//	}
+	//}
 
-	for (const auto& direction : checkDirections)
-	{
-		auto checkCellPosition = TPair<uint8, uint8>(currentRow + direction.Key, currentColumn + direction.Value);
-		if (CanMoveToCell(checkCellPosition))
-		{
-			moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
-		}
-	}
-
-	return true;
+	GetMovesBase(moves, 1);
 }

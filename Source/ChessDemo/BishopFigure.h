@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigureBase.h"
+#include "Containers/Array.h"
 #include "BishopFigure.generated.h"
 
 /**
@@ -16,6 +17,4 @@ class CHESSDEMO_API ABishopFigure : public AFigureBase
 
 public:
 	ABishopFigure();
-
-	bool GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
 };
