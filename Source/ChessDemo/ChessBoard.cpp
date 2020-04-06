@@ -91,15 +91,6 @@ void AChessBoard::FillTheBoard()
 	AddFigureToBoard(ABishopFigure::StaticClass(), 1, 3);
 	AddFigureToBoard(AQueenFigure::StaticClass(), 1, 4, 0, false);
 	AddFigureToBoard(AKingFigure::StaticClass(), 1, 5, 0, false);
-
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 1)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 2)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 3)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 4)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 5)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 6)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 7)), ChessTeam::White);
-	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 8)), ChessTeam::White);
 }
 
 
