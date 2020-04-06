@@ -46,6 +46,11 @@ void APlayerChessController::OnFigureClick(AFigureBase* figure)
 
 void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
 {
+    if (mCurrentPlayer != ChessTeam::White)
+    {
+        return;
+    }
+
     if (m_ActiveFigure && m_ActiveFigure->GetTeam() == ChessTeam::White)
     {
         //If it's not the same try to move there figure
