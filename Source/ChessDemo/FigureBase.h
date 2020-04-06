@@ -76,10 +76,7 @@ protected:
 protected:
 	static AChessBoard* mChessBoard;
 
-	UPROPERTY()
 	ChessTeam mCurrentTeam = ChessTeam::Invalid;
-
-	UPROPERTY()
 	UBoardCell* mCurrentCell = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
