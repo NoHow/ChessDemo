@@ -38,15 +38,6 @@ AKingFigure::AKingFigure()
 void AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
 	GetMovesBase(moves, 1);
-
-	//Check to see if king will be in check state on possible move
-	//TArray<TPair<int32, int32>> checkMoves;
-	//checkMoves.Reserve(8);
-
-	//for (const auto* move : moves)
-	//{
-	//	if(GetCheckStatus())
-	//}
 }
 
 FigureType AKingFigure::GetFigureType() const
@@ -70,7 +61,6 @@ bool AKingFigure::GetCheckStatus()
 		{
 			if (move.Key == boardPosition.Key && move.Value == boardPosition.Value)
 			{
-				GEngine->AddOnScreenDebugMessage(INDEX_NONE, 0.5f, FColor::Yellow, FString("CHECK"));
 				return true;
 			}
 		}

@@ -46,10 +46,10 @@ void APlayerChessController::OnFigureClick(AFigureBase* figure)
 
 void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
 {
-    //if (mCurrentPlayer != ChessTeam::White)
-    //{
-    //    return;
-    //}
+    if (mCurrentPlayer != ChessTeam::White)
+    {
+        return;
+    }
 
     if (m_ActiveFigure)
     {
