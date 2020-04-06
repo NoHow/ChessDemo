@@ -57,21 +57,23 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         if (m_ActiveFigure->MoveTo(cell))
         {
             cell->SetFigure(m_ActiveFigure);
-            if (mChessBoard->GetCheckStatus(ChessTeam::White))
-            {
-                AFigureBase::CancelMove();
-                return;
-            }
 
             m_ActiveFigure = nullptr;
            
             EndTurn();
-            mAI->ScanBoard(mChessBoard);
+            if (!mIsGameOver)
+            {
+                mAI->ScanBoard(mChessBoard);
+            }
         }
         else if (figure)
         {
             m_ActiveFigure->LiftDown();
             m_ActiveFigure = figure;
+        }
+
+        if (m_ActiveFigure)
+        {
             m_ActiveFigure->LiftUp();
         }
     }
@@ -99,5 +101,5 @@ void APlayerChessController::EndTurn()
         mCurrentPlayer = ChessTeam::Dark;
     }
 
-    mChessBoard->CheckMateUpdate(mCurrentPlayer);
+    mIsGameOver = mChessBoard->CheckMateUpdate(mCurrentPlayer);
 }

@@ -35,9 +35,9 @@ AKingFigure::AKingFigure()
 	mCheckDirections.Emplace(-1, -1);
 }
 
-void AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate)
 {
-	GetMovesBase(moves, 1);
+	GetMovesBase(moves, checkUpdate, 1);
 }
 
 FigureType AKingFigure::GetFigureType() const
@@ -62,11 +62,14 @@ bool AKingFigure::GetCheckStatus()
 		TArray<TPair<int32, int32>> moves;
 		figure->GetPossibleMoves(moves);
 
-		for (const auto& move : moves)
+		if (figure->GetTeam() != mCurrentTeam)
 		{
-			if (move.Key == boardPosition.Key && move.Value == boardPosition.Value)
+			for (const auto& move : moves)
 			{
-				return true;
+				if (move.Key == boardPosition.Key && move.Value == boardPosition.Value)
+				{
+					return true;
+				}
 			}
 		}
 	}

@@ -91,6 +91,15 @@ void AChessBoard::FillTheBoard()
 	AddFigureToBoard(ABishopFigure::StaticClass(), 1, 3);
 	AddFigureToBoard(AQueenFigure::StaticClass(), 1, 4, 0, false);
 	AddFigureToBoard(AKingFigure::StaticClass(), 1, 5, 0, false);
+
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 1)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 2)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 3)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 4)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 5)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 6)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 7)), ChessTeam::White);
+	CreateFigure(AQueenFigure::StaticClass(), GetCell(TPair<uint8, uint8>(5, 8)), ChessTeam::White);
 }
 
 
@@ -231,23 +240,34 @@ bool AChessBoard::CreateFigure(UClass* figureClass, UBoardCell* spawnCell, Chess
 	return true;
 }
 
-void AChessBoard::CheckMateUpdate(ChessTeam team)
+bool AChessBoard::CheckMateUpdate(ChessTeam team)
 {
 	if (!CheckForPossibleMoves(team))
 	{
-		switch (team)
+		if (GetCheckStatus(team))
 		{
-		case ChessTeam::White:
-			FinishGame(ChessTeam::Dark);
-			break;
-		case ChessTeam::Dark:
-			FinishGame(ChessTeam::White);
-			break;
-		default:
-			check(false);
-			break;
+			switch (team)
+			{
+			case ChessTeam::White:
+				FinishGame(ChessTeam::Dark);
+				break;
+			case ChessTeam::Dark:
+				FinishGame(ChessTeam::White);
+				break;
+			default:
+				check(false);
+				break;
+			}
 		}
+		else
+		{
+			FinishGame(ChessTeam::Invalid);
+		}
+
+		return true;
 	}
+
+	return false;
 }
 
 bool AChessBoard::GetCheckStatus(ChessTeam team)
@@ -289,13 +309,6 @@ void AChessBoard::FinishGame(ChessTeam winner) const
 
 bool AChessBoard::CheckForPossibleMoves(ChessTeam team)
 {
-	UBoardCell* tmpCell;
-	AFigureBase* tmpFig;
-	return CheckForPossibleMoves(team, tmpCell, tmpFig, false);
-}
-
-bool AChessBoard::CheckForPossibleMoves(ChessTeam team, UBoardCell*& cellToMove, AFigureBase*& figureToMove, bool getMove)
-{
 	for (auto* figure : mFigures)
 	{
 		if (!figure)
@@ -306,26 +319,11 @@ bool AChessBoard::CheckForPossibleMoves(ChessTeam team, UBoardCell*& cellToMove,
 		if (figure->GetTeam() == team)
 		{
 			TArray<TPair<int32, int32>> moves;
-			figure->GetPossibleMoves(moves);
+			figure->GetPossibleMoves(moves, true);
 
-			for (const auto& move : moves)
+			if (moves.Num() > 0)
 			{
-				UBoardCell* cell = GetCell(TPair<uint8, uint8>(move.Key, move.Value));
-				if (figure->MoveTo(cell))
-				{
-					cell->SetFigure(figure);
-					if (!GetCheckStatus(team))
-					{
-						AFigureBase::CancelMove();
-						if (getMove)
-						{
-							cellToMove = cell;
-							figureToMove = figure;
-						}
-						return true;
-					}
-					AFigureBase::CancelMove();
-				}
+				return true;
 			}
 		}
 	}

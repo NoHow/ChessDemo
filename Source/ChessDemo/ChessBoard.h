@@ -48,14 +48,13 @@ public:
 	void KillFigure(AFigureBase* figure);
 	void RestoreFigure(AFigureBase* figure);
 
-	void CheckMateUpdate(ChessTeam team);
+	bool CheckMateUpdate(ChessTeam team);
 
 	const TArray<AFigureBase*>& GetAllFigures() const;
 	bool GetCheckStatus(ChessTeam team);
 
 	void FinishGame(ChessTeam winner) const;
 	bool CheckForPossibleMoves(ChessTeam team);
-	bool CheckForPossibleMoves(ChessTeam team, UBoardCell*& move, AFigureBase*& figure, bool getMove = false);
 
 private:
 	void InitBoard();

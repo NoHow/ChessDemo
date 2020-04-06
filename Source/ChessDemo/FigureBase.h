@@ -44,7 +44,7 @@ public:
 	void Init(ChessTeam team, UBoardCell* cell);
 
 	//If figure have specific behaviour should override this method with their movement, writes all cell where figure might step 
-	virtual void GetPossibleMoves(TArray<TPair<int32, int32>>& moves);
+	virtual void GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate = false);
 
 	//Move figure to desired cell
 	virtual bool MoveTo(UBoardCell* newCell);
@@ -70,8 +70,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	bool CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure) const;
-	void GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLimit = 255) const;
+	bool CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure, bool checkUpdate = false);
+	void GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpdate = false, uint8 checkLimit = 255);
+	bool MakeMove(UBoardCell* destinationCell);
 
 protected:
 	static AChessBoard* mChessBoard;
@@ -96,6 +97,7 @@ protected:
 	static UBoardCell* mPreviousCell;
 	static AFigureBase* mPreviousFigure;
 	static AFigureBase* mKilledFigure;
+	
 private:
 	//True - Dark team, False - White team
 	void SetTeam(ChessTeam newTeam);

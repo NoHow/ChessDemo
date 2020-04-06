@@ -46,65 +46,58 @@ void UChessAI::ScanBoard(AChessBoard* board)
 	UBoardCell* bestMove = nullptr;
 	AFigureBase* bestFigure = nullptr;
 
-	if (board->GetCheckStatus(ChessTeam::Dark))
+	TMap<AFigureBase*, UBoardCell*> bestMoves;
+	const uint8 boardLimit = 9;
+	for(auto* figure : board->GetAllFigures())
 	{
-		board->CheckForPossibleMoves(ChessTeam::Dark, bestMove, bestFigure, true);
+		if (!figure)
+		{
+			continue;
+		}
+
+		UBoardCell* boardCell = figure->GetCurrentCell();
+		check(boardCell);
+
+		if (figure->GetTeam() == mAITeam)
+		{
+			UBoardCell* currentBestMove = figure->FindBestMove();
+			if (currentBestMove)
+			{
+				bestMoves.Add(figure, currentBestMove);
+			}
+		}
 	}
-	else
+
+	float maxValue = FLT_MIN;
+	for (const auto& it : bestMoves)
 	{
-		TMap<AFigureBase*, UBoardCell*> bestMoves;
-		const uint8 boardLimit = 9;
-		for(auto* figure : board->GetAllFigures())
+		AFigureBase* currentFigure = it.Key;
+		UBoardCell* currentMove = it.Value;
+
+		AFigureBase* valueFrom = currentMove->GetFigure();
+		if (!valueFrom)
 		{
-			if (!figure)
-			{
-				continue;
-			}
-
-			UBoardCell* boardCell = figure->GetCurrentCell();
-			check(boardCell);
-
-			if (figure->GetTeam() == mAITeam)
-			{
-				UBoardCell* currentBestMove = figure->FindBestMove();
-				if (currentBestMove)
-				{
-					bestMoves.Add(figure, currentBestMove);
-				}
-			}
+			continue;
 		}
 
-		float maxValue = FLT_MIN;
-		for (const auto& it : bestMoves)
+		const float figureValue = valueFrom->GetFigureValue();
+		if (figureValue > maxValue)
 		{
-			AFigureBase* currentFigure = it.Key;
-			UBoardCell* currentMove = it.Value;
-
-			AFigureBase* valueFrom = currentMove->GetFigure();
-			if (!valueFrom)
-			{
-				continue;
-			}
-
-			const float figureValue = valueFrom->GetFigureValue();
-			if (figureValue > maxValue)
-			{
-				bestMove = currentMove;
-				bestFigure = currentFigure;
-				maxValue = figureValue;
-			}
+			bestMove = currentMove;
+			bestFigure = currentFigure;
+			maxValue = figureValue;
 		}
+	}
 
-		if (!bestMove && bestMoves.Num() > 0)
-		{
-			TArray<AFigureBase*> mKeyArray;
-			bestMoves.GenerateKeyArray(mKeyArray);
+	if (!bestMove && bestMoves.Num() > 0)
+	{
+		TArray<AFigureBase*> mKeyArray;
+		bestMoves.GenerateKeyArray(mKeyArray);
 
-			size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
+		size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
 
-			bestFigure = mKeyArray[randomIndex];
-			bestMove = *bestMoves.Find(bestFigure);
-		}
+		bestFigure = mKeyArray[randomIndex];
+		bestMove = *bestMoves.Find(bestFigure);
 	}
 
 	if (bestFigure)

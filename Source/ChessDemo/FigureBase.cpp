@@ -122,7 +122,7 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 	}
 
 	TArray<TPair<int32, int32>> moves;
-	GetPossibleMoves(moves);
+	GetPossibleMoves(moves, true);
 
 	const TPair<uint8, uint8>& position = newCell->GetBoardPosition();
 
@@ -136,7 +136,14 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 		return false;
 	}
 
-	AFigureBase* newCellFigure = newCell->GetFigure();
+	MakeMove(newCell);
+
+	return true;
+}
+
+bool AFigureBase::MakeMove(UBoardCell* destinationCell)
+{
+	AFigureBase* newCellFigure = destinationCell->GetFigure();
 	if (newCellFigure)
 	{
 		if (newCellFigure->GetTeam() == mCurrentTeam)
@@ -158,11 +165,11 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 	{
 		mKilledFigure = nullptr;
 	}
-	
+
 	mCurrentCell->SetFigure(nullptr);
 	mPreviousCell = mCurrentCell;
 	mPreviousFigure = this;
-	mCurrentCell = newCell;
+	mCurrentCell = destinationCell;
 
 	return true;
 }
@@ -205,7 +212,7 @@ void AFigureBase::SetTeam(ChessTeam newTeam)
 	mCurrentTeam = newTeam;
 }
 
-bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure) const
+bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure, bool checkUpdate)
 {
 	if (!mChessBoard)
 	{
@@ -219,26 +226,38 @@ bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereF
 		if (checkFigure)
 		{
 			isThereFigure = true;
-			if (checkFigure->GetTeam() != mCurrentTeam)
-			{
-				return true;
-			}
-			else
+			if (checkFigure->GetTeam() == mCurrentTeam)
 			{
 				return false;
 			}
+
 		}
 		else
 		{
 			isThereFigure = false;
-			return true;
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	if (checkUpdate && MakeMove(checkCell))
+	{
+		checkCell->SetFigure(this);
+		bool isCheck = mChessBoard->GetCheckStatus(mCurrentTeam);
+
+		AFigureBase::CancelMove();
+		if (isCheck)
+		{
+			return false;
 		}
 	}
 
-	return false;
+	return true;
 }
 
-void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLimit) const
+void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpdate, uint8 checkLimit)
 {
 	check(mCurrentCell && mChessBoard);
 
@@ -260,10 +279,11 @@ void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLi
 		while (checkCell && checkCounter++ < checkLimit)
 		{
 			bool isThereFigure = false;
-			if (!CanMoveToCell(checkCellPosition, isThereFigure))
+			if (!CanMoveToCell(checkCellPosition, isThereFigure, checkUpdate))
 			{
 				break;
 			}
+
 			moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
 
 			if (isThereFigure)
@@ -279,16 +299,16 @@ void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLi
 	}
 }
 
-void AFigureBase::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void AFigureBase::GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate)
 {
-	GetMovesBase(moves);
+	GetMovesBase(moves, checkUpdate);
 }
 
 UBoardCell* AFigureBase::FindBestMove()
 {
 	check(mChessBoard);
 	TArray<TPair<int32, int32>> moves;
-	GetPossibleMoves(moves);
+	GetPossibleMoves(moves, true);
 
 	if (moves.Num() == 0)
 	{
@@ -297,9 +317,6 @@ UBoardCell* AFigureBase::FindBestMove()
 
 	float maxValue = FLT_MIN;
 	UBoardCell* bestMove = nullptr;
-
-	TArray<TPair<int32, int32>> checkedMoves;
-	checkedMoves.Reserve(32);
 
 	for (const auto& move : moves)
 	{
@@ -319,22 +336,11 @@ UBoardCell* AFigureBase::FindBestMove()
 				maxValue = figureValue;
 			}
 		}
-
-		if (MoveTo(cell))
-		{
-			cell->SetFigure(this);
-			if (!mChessBoard->GetCheckStatus(mCurrentTeam))
-			{
-				checkedMoves.Add(move);
-			}
-
-			AFigureBase::CancelMove();
-		}
 	}
 
-	if (!bestMove && checkedMoves.Num() > 0)
+	if (!bestMove && moves.Num() > 0)
 	{
-		auto& randomMove = checkedMoves[UKismetMathLibrary::RandomInteger(checkedMoves.Num())];
+		auto& randomMove = moves[UKismetMathLibrary::RandomInteger(moves.Num())];
 		bestMove = mChessBoard->GetCell(TPair<uint8, uint8>(randomMove.Key, randomMove.Value));
 	}
 

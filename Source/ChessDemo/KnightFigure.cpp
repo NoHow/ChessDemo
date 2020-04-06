@@ -34,9 +34,9 @@ AKnightFigure::AKnightFigure()
 	mCheckDirections.Emplace(-1, -2);
 }
 
-void AKnightFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void AKnightFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate)
 {
-	GetMovesBase(moves, 1);
+	GetMovesBase(moves, checkUpdate, 1);
 }
 
 FigureType AKnightFigure::GetFigureType() const

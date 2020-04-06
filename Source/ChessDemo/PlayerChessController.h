@@ -35,6 +35,7 @@ private:
 
 private:
     AFigureBase* m_ActiveFigure;
+    bool mIsGameOver = false;
     
     ChessTeam mCurrentPlayer = ChessTeam::White;
     AChessBoard* mChessBoard = nullptr;

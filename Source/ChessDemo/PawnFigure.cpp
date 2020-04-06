@@ -28,7 +28,7 @@ APawnFigure::APawnFigure()
 	mFigureValue = 1.f;
 }
 
-void APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
+void APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate)
 {
 	check(mCurrentCell);
 
@@ -73,6 +73,29 @@ void APawnFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 	if (CheckCellForEnemy(checkCellPosition))
 	{
 		moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+	}
+
+	if (checkUpdate)
+	{
+		TArray<TPair<int32, int32>> finalMoves;
+		finalMoves.Reserve(3);
+
+		for (const auto& move : moves)
+		{
+			UBoardCell* checkCell = mChessBoard->GetCell(TPair<uint8, uint8>(move.Key, move.Value));
+			if (MakeMove(checkCell))
+			{
+				checkCell->SetFigure(this);
+				if (!mChessBoard->GetCheckStatus(mCurrentTeam))
+				{
+					finalMoves.Add(move);
+				}
+
+				AFigureBase::CancelMove();
+			}
+		}
+
+		moves = finalMoves;
 	}
 }
 

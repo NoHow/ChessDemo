@@ -18,7 +18,7 @@ public:
 	APawnFigure();
 
 	bool MoveTo(UBoardCell* newCell) override;
-	void GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
+	void GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate = false) override;
 	FigureType GetFigureType() const override;
 	
 private:
