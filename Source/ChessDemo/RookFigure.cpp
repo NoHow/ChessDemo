@@ -29,3 +29,8 @@ ARookFigure::ARookFigure()
 	mCheckDirections.Emplace(0, 1);
 	mCheckDirections.Emplace(0, -1);
 }
+
+FigureType ARookFigure::GetFigureType() const
+{
+	return FigureType::Rook;
+}

@@ -18,4 +18,10 @@ public:
 	AKingFigure();
 
 	void GetPossibleMoves(TArray<TPair<int32, int32>>& moves) override;
+	FigureType GetFigureType() const override;
+
+	bool GetCheckStatus();
+
+private:
+	bool GetCheckMateStatus();
 };

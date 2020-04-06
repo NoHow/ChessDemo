@@ -36,10 +36,13 @@ AChessBoard::AChessBoard()
 	{
 		for(uint8 columnIndex = 0; columnIndex < mCells[rowIndex].Num(); columnIndex++)
 		{
-			FString name = "cell" + FString::FromInt(rowIndex) + FString::FromInt(columnIndex);
+			FString name = "cell" + FString::FromInt(rowIndex + 1u) + FString::FromInt(columnIndex + 1u);
 			mCells[rowIndex][columnIndex] = CreateDefaultSubobject<UBoardCell>(*name);
 		}
 	}
+
+	const int32 maxFigureAmout = 32;
+	mFigures.Reserve(maxFigureAmout);
 
 	SetRootComponent(Cast<USceneComponent>(m_MeshComponent));
 }
@@ -53,6 +56,7 @@ void AChessBoard::BeginPlay()
 
 	FillTheBoard();
 
+	AFigureBase::SetBoard(this);
 	UWorld* world = GetWorld();
 	if (world)
 	{
@@ -62,6 +66,11 @@ void AChessBoard::BeginPlay()
 			controller->SetBoard(this);
 		}
 	}
+}
+
+void AChessBoard::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	AFigureBase::SetBoard(nullptr);
 }
 
 // Called every frame
@@ -125,28 +134,18 @@ void AChessBoard::KillFigure(AFigureBase* figure)
 		cell->SetFigure(nullptr);
 	}
 
-	if (Cast<AKingFigure>(figure))
-	{
-		UWorld* world = GetWorld();
-		APlayerChessController* controller = nullptr;
-		if (ensure(world))
-		{
-			controller = Cast<APlayerChessController>(world->GetFirstPlayerController());
-		}
-		
-		if (controller)
-		{
-			if (figure->GetTeam() == ChessTeam::Dark)
-			{
-				controller->FinishChessGame(true);
-			}
-			else
-			{
-				controller->FinishChessGame(false);
-			}
-		}
-	}
-	figure->Destroy();
+	size_t figureIndex = mFigures.IndexOfByKey(figure);
+	mFigures.RemoveAtSwap(figureIndex);
+
+	figure->SetActorLocation(figure->GetActorLocation() - mHideVector, false, nullptr, ETeleportType::ResetPhysics);
+}
+
+void AChessBoard::RestoreFigure(AFigureBase* figure)
+{
+	check(figure);
+
+	mFigures.Add(figure);
+	figure->SetActorLocation(figure->GetActorLocation() + mHideVector, false, nullptr, ETeleportType::ResetPhysics);
 }
 
 UBoardCell* AChessBoard::GetCell(const TPair<uint8, uint8>& position)
@@ -210,10 +209,107 @@ bool AChessBoard::CreateFigure(UClass* figureClass, UBoardCell* spawnCell, Chess
 		return false;
 	}
 
-	figure->Init(team, spawnCell, this);
+	figure->Init(team, spawnCell);
 	figure->SetActorRotation(FRotator{ 0, rotation, 0 }, ETeleportType::TeleportPhysics);
+	mFigures.Add(figure);
+
+	if (figure->GetFigureType() == FigureType::King)
+	{
+		if (team == ChessTeam::Dark)
+		{
+			mDarkKing = Cast<AKingFigure>(figure);
+		}
+		else if (team == ChessTeam::White)
+		{
+			mWhiteKing = Cast<AKingFigure>(figure);
+		}
+	}
 
 	spawnCell->SetFigure(figure);
 	
 	return true;
+}
+
+void AChessBoard::CheckMateUpdate(ChessTeam team)
+{
+	if (!CheckForPossibleMoves(team))
+	{
+		switch (team)
+		{
+		case ChessTeam::White:
+			FinishGame(ChessTeam::Dark);
+			break;
+		case ChessTeam::Dark:
+			FinishGame(ChessTeam::White);
+			break;
+		default:
+			check(false);
+			break;
+		}
+	}
+}
+
+bool AChessBoard::GetCheckStatus(ChessTeam team)
+{
+	switch (team)
+	{
+	case ChessTeam::White:
+		return mWhiteKing->GetCheckStatus();
+		break;
+	case ChessTeam::Dark:
+		return mDarkKing->GetCheckStatus();
+		break;
+	default:
+		check(false);
+		break;
+	}
+
+	return false;
+}
+
+const TArray<AFigureBase*>& AChessBoard::GetAllFigures() const
+{
+	return mFigures;
+}
+
+void AChessBoard::FinishGame(ChessTeam winner) const
+{
+	UWorld* world = GetWorld();
+	check(world);
+
+	APlayerChessController* controller = nullptr;
+	controller = Cast<APlayerChessController>(world->GetFirstPlayerController());
+	check(controller);
+
+	controller->FinishChessGame(winner);
+	controller->bEnableTouchEvents = false;
+	controller->bEnableClickEvents = false;
+}
+
+bool AChessBoard::CheckForPossibleMoves(ChessTeam team)
+{
+	for (auto& figure : mFigures)
+	{
+		if (figure->GetTeam() == team)
+		{
+			TArray<TPair<int32, int32>> moves;
+			figure->GetPossibleMoves(moves);
+
+			for (const auto& move : moves)
+			{
+				UBoardCell* cell = GetCell(TPair<uint8, uint8>(move.Key, move.Value));
+				if (figure->MoveTo(cell))
+				{
+					if (!GetCheckStatus(team))
+					{
+						AFigureBase::CancelMove();
+						return true;
+					}
+					AFigureBase::CancelMove();
+				}
+			}
+		}
+	}
+
+	return false;
 }

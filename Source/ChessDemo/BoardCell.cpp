@@ -81,7 +81,7 @@ void UBoardCell::SetBoardPosition(TPair<uint8, uint8> position)
 	mBoardPosition = position;
 }
 
-TPair<uint8, uint8> UBoardCell::GetBoardPosition() const
+const TPair<uint8, uint8>& UBoardCell::GetBoardPosition() const
 {
 	return mBoardPosition;
 }

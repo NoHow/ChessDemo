@@ -4,7 +4,8 @@
 #include "KingFigure.h"
 #include "UObject/ConstructorHelpers.h"
 #include "ChessBoard.h"
-#include "BoardCell.h" 
+#include "BoardCell.h"
+#include "Engine/Engine.h"
 
 AKingFigure::AKingFigure()
 {
@@ -37,4 +38,43 @@ AKingFigure::AKingFigure()
 void AKingFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
 	GetMovesBase(moves, 1);
+
+	//Check to see if king will be in check state on possible move
+	//TArray<TPair<int32, int32>> checkMoves;
+	//checkMoves.Reserve(8);
+
+	//for (const auto* move : moves)
+	//{
+	//	if(GetCheckStatus())
+	//}
+}
+
+FigureType AKingFigure::GetFigureType() const
+{
+	return FigureType::King;
+}
+
+bool AKingFigure::GetCheckStatus()
+{
+	auto figures = mChessBoard->GetAllFigures();
+
+	TPair<uint8, uint8> boardPosition;
+	boardPosition = GetCurrentCell()->GetBoardPosition();
+	
+	for (const auto& figure : figures)
+	{
+		TArray<TPair<int32, int32>> moves;
+		figure->GetPossibleMoves(moves);
+
+		for (const auto& move : moves)
+		{
+			if (move.Key == boardPosition.Key && move.Value == boardPosition.Value)
+			{
+				GEngine->AddOnScreenDebugMessage(INDEX_NONE, 0.5f, FColor::Yellow, FString("CHECK"));
+				return true;
+			}
+		}
+	}
+
+	return false;
 }

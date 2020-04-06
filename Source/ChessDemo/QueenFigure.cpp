@@ -33,3 +33,8 @@ AQueenFigure::AQueenFigure()
 	mCheckDirections.Emplace(1, -1);
 	mCheckDirections.Emplace(-1, -1);
 }
+
+FigureType AQueenFigure::GetFigureType() const
+{
+	return FigureType::Queen;
+}

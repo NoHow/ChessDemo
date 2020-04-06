@@ -11,6 +11,11 @@
 #include "PlayerChessController.h"
 #include "BoardCell.h"
 
+UBoardCell* AFigureBase::mPreviousCell = nullptr;
+AFigureBase* AFigureBase::mPreviousFigure = nullptr;
+AFigureBase* AFigureBase::mKilledFigure = nullptr;
+AChessBoard* AFigureBase::mChessBoard = nullptr;
+
 // Sets default values
 AFigureBase::AFigureBase()
 {
@@ -61,14 +66,13 @@ UBoardCell* AFigureBase::GetCurrentCell() const
 	return mCurrentCell;
 }
 
-void AFigureBase::Init(ChessTeam team, UBoardCell* cell, AChessBoard* chessBoard)
+void AFigureBase::Init(ChessTeam team, UBoardCell* cell)
 {
-	if (mChessBoard || !chessBoard || team == ChessTeam::Invalid)
+	if (mChessBoard || team == ChessTeam::Invalid)
 	{
 		return;
 	}
 
-	mChessBoard = chessBoard;
 	SetTeam(team);
 	SetCurrentCell(cell);
 }
@@ -141,16 +145,23 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 		}
 		else
 		{
-			if (ensure(mChessBoard))
+			if (mKilledFigure)
 			{
-				mChessBoard->KillFigure(newCellFigure);
+				mKilledFigure->Destroy();
 			}
+
+			mChessBoard->KillFigure(newCellFigure);
+			mKilledFigure = newCellFigure;
 		}
 	}
-	if (mCurrentCell)
+	else
 	{
-		mCurrentCell->SetFigure(nullptr);
+		mKilledFigure = nullptr;
 	}
+	
+	mCurrentCell->SetFigure(nullptr);
+	mPreviousCell = mCurrentCell;
+	mPreviousFigure = this;
 	mCurrentCell = newCell;
 
 	return true;
@@ -316,4 +327,39 @@ UBoardCell* AFigureBase::FindBestMove()
 	}
 
 	return bestMove;
+}
+
+FigureType AFigureBase::GetFigureType() const
+{
+	return FigureType::Invalid;
+}
+
+void AFigureBase::CancelMove()
+{
+	if (mPreviousCell && mPreviousFigure)
+	{
+		UBoardCell* previousFigureCell = mPreviousFigure->GetCurrentCell();
+		if (mKilledFigure)
+		{
+			mChessBoard->RestoreFigure(mKilledFigure);
+			previousFigureCell->SetFigure(mKilledFigure);
+			mKilledFigure->SetCurrentCell(previousFigureCell);
+		}
+		else
+		{
+			previousFigureCell->SetFigure(nullptr);
+		}
+		
+		mPreviousFigure->SetCurrentCell(mPreviousCell);
+		mPreviousCell->SetFigure(mPreviousFigure);
+
+		mPreviousFigure = nullptr;
+		mPreviousCell = nullptr;
+		mKilledFigure = nullptr;
+	}
+}
+
+void AFigureBase::SetBoard(AChessBoard* board)
+{
+	mChessBoard = board;
 }

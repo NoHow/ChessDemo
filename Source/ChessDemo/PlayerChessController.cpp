@@ -8,6 +8,7 @@
 #include "BoardCell.h"
 #include "Containers/Array.h"
 #include "ChessAI.h"
+#include "ChessBoard.h"
 
 APlayerChessController::APlayerChessController()
 {
@@ -21,15 +22,6 @@ APlayerChessController::APlayerChessController()
 void APlayerChessController::SetupInputComponent()
 {
     Super::SetupInputComponent();
-}
-
-void APlayerChessController::PlayerTick(float DeltaTime)
-{
-    if (mCurrentPlayer == ChessTeam::Dark)
-    {
-        mAI->ScanBoard(mChessBoard);
-        mCurrentPlayer = ChessTeam::White;
-    }
 }
 
 void APlayerChessController::OnCellClick(UBoardCell* cell)
@@ -54,10 +46,10 @@ void APlayerChessController::OnFigureClick(AFigureBase* figure)
 
 void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
 {
-    if (mCurrentPlayer != ChessTeam::White)
-    {
-        return;
-    }
+    //if (mCurrentPlayer != ChessTeam::White)
+    //{
+    //    return;
+    //}
 
     if (m_ActiveFigure)
     {
@@ -65,11 +57,18 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         if (m_ActiveFigure->MoveTo(cell))
         {
             cell->SetFigure(m_ActiveFigure);
+            if (mChessBoard->GetCheckStatus(ChessTeam::White))
+            {
+                AFigureBase::CancelMove();
+                return;
+            }
+
             m_ActiveFigure = nullptr;
-            
-            mCurrentPlayer = ChessTeam::Dark;
+           
+            EndTurn();
+            mAI->ScanBoard(mChessBoard);
         }
-        else if(figure && m_ActiveFigure->GetTeam() == figure->GetTeam())
+        else if (figure)
         {
             m_ActiveFigure->LiftDown();
             m_ActiveFigure = figure;
@@ -77,17 +76,28 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         }
     }
     //If there are no active figures - make this one active
-    else if(figure && figure->GetTeam() == ChessTeam::White)
+    else if(figure)
     {
-        if (figure->GetTeam() == mCurrentPlayer)
-        {
-            m_ActiveFigure = figure;
-            m_ActiveFigure->LiftUp();
-        }
+        m_ActiveFigure = figure;
+        m_ActiveFigure->LiftUp();
     }
 }
 
 void APlayerChessController::SetBoard(AChessBoard* board)
 {
     mChessBoard = board;
+}
+
+void APlayerChessController::EndTurn()
+{
+    if (mCurrentPlayer == ChessTeam::Dark)
+    {
+        mCurrentPlayer = ChessTeam::White;
+    }
+    else if(mCurrentPlayer == ChessTeam::White)
+    {
+        mCurrentPlayer = ChessTeam::Dark;
+    }
+
+    mChessBoard->CheckMateUpdate(mCurrentPlayer);
 }

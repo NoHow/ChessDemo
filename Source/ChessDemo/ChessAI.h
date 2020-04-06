@@ -29,5 +29,9 @@ public:
 	void ScanBoard(AChessBoard* board);
 
 private:
+	UFUNCTION()
+	void OnSelectMove(AFigureBase* figure, UBoardCell* cellToMove, AChessBoard* board);
+
+private:
 	ChessTeam mAITeam = ChessTeam::Dark;
 };

@@ -5,7 +5,10 @@
 #include "ChessBoard.h"
 #include "Containers/Array.h"
 #include "Containers/Map.h"
-#include "Kismet/KismetMathLibrary.h" 
+#include "Kismet/KismetMathLibrary.h"
+#include "PlayerChessController.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 // Sets default values for this component's properties
 UChessAI::UChessAI()
@@ -13,8 +16,6 @@ UChessAI::UChessAI()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -73,16 +74,16 @@ void UChessAI::ScanBoard(AChessBoard* board)
 	float maxValue = FLT_MIN;
 	for (const auto& it : bestMoves)
 	{
-		AFigureBase* currentFigure = it.Value;
-		UBoardCell* currentMove = it.Key;
+		AFigureBase* currentFigure = it.Key;
+		UBoardCell* currentMove = it.Value;
 
-		AFigureBase* valueFrom = currentFigure->GetFigure();
+		AFigureBase* valueFrom = currentMove->GetFigure();
 		if (!valueFrom)
 		{
 			continue;
 		}
 
-		const float figureValue = currentFigure->GetFigureValue() + valueFrom->GetFigureValue();
+		const float figureValue = valueFrom->GetFigureValue();
 		if (figureValue > maxValue)
 		{
 			bestMove = currentMove;
@@ -91,22 +92,38 @@ void UChessAI::ScanBoard(AChessBoard* board)
 		}
 	}
 
-	if (bestMove)
-	{
-		bestFigure->MoveTo(bestMove);
-		bestMove->SetFigure(bestFigure);
-	}
-	else
+	if (!bestMove && bestMoves.Num() > 0)
 	{
 		TArray<AFigureBase*> mKeyArray;
 		bestMoves.GenerateKeyArray(mKeyArray);
-		
-		size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
-		
-		AFigureBase* randFigure = mKeyArray[randomIndex];
-		auto randMove = bestMoves.Find(randFigure);
 
-		randFigure->MoveTo(*randMove);
-		(*randMove)->SetFigure(randFigure);
+		size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
+
+		bestFigure = mKeyArray[randomIndex];
+		bestMove = *bestMoves.Find(bestFigure);
 	}
+
+	bestFigure->LiftUp();
+
+	FTimerDelegate mTimerDel;
+	FTimerHandle mTimerHandle;
+
+	auto& timerManager = GetWorld()->GetTimerManager();
+	mTimerDel.BindUFunction(this, FName("OnSelectMove"), bestFigure, bestMove, board);
+
+	const float mAIDelay = 1.5f;
+	timerManager.SetTimer(mTimerHandle, mTimerDel, mAIDelay, false);
+}
+
+void UChessAI::OnSelectMove(AFigureBase* figure, UBoardCell* cellToMove, AChessBoard* board)
+{
+	check(figure && cellToMove && board);
+
+	figure->MoveTo(cellToMove);
+	cellToMove->SetFigure(figure);
+
+	auto controller = Cast<APlayerChessController>(GetWorld()->GetFirstPlayerController());
+	check(controller);
+
+	controller->EndTurn();
 }

@@ -29,3 +29,8 @@ ABishopFigure::ABishopFigure()
 	mCheckDirections.Emplace(1, -1);
 	mCheckDirections.Emplace(-1, -1);
 }
+
+FigureType ABishopFigure::GetFigureType() const
+{
+	return FigureType::Bishop;
+}

@@ -16,4 +16,6 @@ class CHESSDEMO_API ARookFigure : public AFigureBase
 	
 public:
 	ARookFigure();
+
+	FigureType GetFigureType() const override;
 };

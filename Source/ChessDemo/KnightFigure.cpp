@@ -36,21 +36,10 @@ AKnightFigure::AKnightFigure()
 
 void AKnightFigure::GetPossibleMoves(TArray<TPair<int32, int32>>& moves)
 {
-	//check(mChessBoard && mCurrentCell);
-
-	//auto cellPosition = mCurrentCell->GetBoardPosition();
-	//const uint8 currentRow = cellPosition.Key;
-	//const uint8 currentColumn = cellPosition.Value;
-
-	//for (const auto& direction : mCheckDirections)
-	//{
-	//	auto checkCellPosition = TPair<uint8, uint8>(currentRow + direction.Key, currentColumn + direction.Value);
-	//	bool isThereFigure = false;
-	//	if (CanMoveToCell(checkCellPosition, isThereFigure))
-	//	{
-	//		moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
-	//	}
-	//}
-
 	GetMovesBase(moves, 1);
+}
+
+FigureType AKnightFigure::GetFigureType() const
+{
+	return FigureType::Knight;
 }

@@ -37,7 +37,7 @@ public:
 	void TouchResponce(const ETouchIndex::Type Key, UPrimitiveComponent* component);
 
 	void SetBoardPosition(TPair<uint8, uint8> position);
-	TPair<uint8, uint8> GetBoardPosition() const;
+	const TPair<uint8, uint8>& GetBoardPosition() const;
 
 private:
 	UPROPERTY()

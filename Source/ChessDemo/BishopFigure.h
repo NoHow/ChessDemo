@@ -17,4 +17,6 @@ class CHESSDEMO_API ABishopFigure : public AFigureBase
 
 public:
 	ABishopFigure();
+
+    FigureType GetFigureType() const override;
 };

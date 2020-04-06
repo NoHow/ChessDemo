@@ -16,4 +16,6 @@ class CHESSDEMO_API AQueenFigure : public AFigureBase
 	
 public:
 	AQueenFigure();
+
+	FigureType GetFigureType() const override;
 };

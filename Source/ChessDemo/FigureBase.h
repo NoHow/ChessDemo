@@ -17,6 +17,18 @@ enum class ChessTeam : uint8
 	Dark
 };
 
+UENUM()
+enum class FigureType : uint8
+{
+	Invalid,
+	Rook,
+	Knight,
+	Bishop,
+	Queen,
+	King,
+	Pawn
+};
+
 UCLASS()
 class CHESSDEMO_API AFigureBase : public APawn
 {
@@ -29,13 +41,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void Init(ChessTeam team, UBoardCell* cell, AChessBoard* chessBoard);
+	void Init(ChessTeam team, UBoardCell* cell);
 
 	//If figure have specific behaviour should override this method with their movement, writes all cell where figure might step 
 	virtual void GetPossibleMoves(TArray<TPair<int32, int32>>& moves);
 
 	//Move figure to desired cell
 	virtual bool MoveTo(UBoardCell* newCell);
+
+	UFUNCTION(BlueprintCallable, Category="ChessMoves")
+	static void CancelMove();
+
+	virtual FigureType GetFigureType() const;
 
 	void LiftUp();
 	void LiftDown();
@@ -48,6 +65,8 @@ public:
 	UBoardCell* GetCurrentCell() const;
 
 	float GetFigureValue() const;
+
+	static void SetBoard(AChessBoard* board);
 protected:
 	virtual void BeginPlay() override;
 
@@ -55,8 +74,7 @@ protected:
 	void GetMovesBase(TArray<TPair<int32, int32>>& moves, uint8 checkLimit = 255) const;
 
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	AChessBoard* mChessBoard;
+	static AChessBoard* mChessBoard;
 
 	UPROPERTY()
 	ChessTeam mCurrentTeam = ChessTeam::Invalid;
@@ -84,7 +102,11 @@ private:
 
 	void NotifyActorOnClicked(FKey buttonPressed = EKeys::LeftMouseButton) override;
 	void NotifyActorOnInputTouchBegin(const ETouchIndex::Type FingerIndex) override;
-
+	
 	void ProcessInteraction();
+	
+	static UBoardCell* mPreviousCell;
+	static AFigureBase* mPreviousFigure;
+	static AFigureBase* mKilledFigure;
 };
 	

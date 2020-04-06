@@ -91,6 +91,11 @@ bool APawnFigure::MoveTo(UBoardCell* newCell)
 	return false;
 }
 
+FigureType APawnFigure::GetFigureType() const
+{
+	return FigureType::Pawn;
+}
+
 bool APawnFigure::CheckCellForEnemy(TPair<uint8, uint8> cellPosition) const
 {
 	if (!mChessBoard)

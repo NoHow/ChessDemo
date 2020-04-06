@@ -19,7 +19,6 @@ class CHESSDEMO_API APlayerChessController : public APlayerController
 public:
     APlayerChessController();
 
-    void PlayerTick(float DeltaTime) override;
     void SetupInputComponent() override;
 
     void OnCellClick(UBoardCell* cell);
@@ -27,8 +26,10 @@ public:
 
     void SetBoard(AChessBoard* board);
 
+    void EndTurn();
+
     UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Game")
-    void FinishChessGame(bool isPlayerWin);
+    void FinishChessGame(ChessTeam winner);
 private:
     void ProcessClick(UBoardCell* cell, AFigureBase* figure);
 
