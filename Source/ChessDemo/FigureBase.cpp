@@ -298,6 +298,9 @@ UBoardCell* AFigureBase::FindBestMove()
 	float maxValue = FLT_MIN;
 	UBoardCell* bestMove = nullptr;
 
+	TArray<TPair<int32, int32>> checkedMoves;
+	checkedMoves.Reserve(32);
+
 	for (const auto& move : moves)
 	{
 		UBoardCell* cell = mChessBoard->GetCell(TPair<uint8, uint8>(move.Key, move.Value));
@@ -307,22 +310,31 @@ UBoardCell* AFigureBase::FindBestMove()
 		}
 
 		AFigureBase* valueFrom = cell->GetFigure();
-		if (!valueFrom)
+		if (valueFrom)
 		{
-			continue;
+			const float figureValue = valueFrom->GetFigureValue();
+			if (figureValue > maxValue)
+			{
+				bestMove = cell;
+				maxValue = figureValue;
+			}
 		}
 
-		const float figureValue = valueFrom->GetFigureValue();
-		if (figureValue > maxValue)
+		if (MoveTo(cell))
 		{
-			bestMove = cell;
-			maxValue = figureValue;
+			cell->SetFigure(this);
+			if (!mChessBoard->GetCheckStatus(mCurrentTeam))
+			{
+				checkedMoves.Add(move);
+			}
+
+			AFigureBase::CancelMove();
 		}
 	}
 
-	if (!bestMove)
+	if (!bestMove && checkedMoves.Num() > 0)
 	{
-		auto& randomMove = moves[UKismetMathLibrary::RandomInteger(moves.Num())];
+		auto& randomMove = checkedMoves[UKismetMathLibrary::RandomInteger(checkedMoves.Num())];
 		bestMove = mChessBoard->GetCell(TPair<uint8, uint8>(randomMove.Key, randomMove.Value));
 	}
 

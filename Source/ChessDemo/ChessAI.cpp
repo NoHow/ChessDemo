@@ -43,20 +43,26 @@ void UChessAI::ScanBoard(AChessBoard* board)
 {
 	check(board);
 
-	TMap<AFigureBase*, UBoardCell*> bestMoves;
-	const uint8 boardLimit = 9;
-	for (uint8 row = 1; row < boardLimit; row++)
-	{
-		for (uint8 column = 1; column < boardLimit; column++)
-		{
-			UBoardCell* boardCell = board->GetCell(TPair<uint8, uint8>(row, column));
-			check(boardCell);
+	UBoardCell* bestMove = nullptr;
+	AFigureBase* bestFigure = nullptr;
 
-			AFigureBase* figure = boardCell->GetFigure();
+	if (board->GetCheckStatus(ChessTeam::Dark))
+	{
+		board->CheckForPossibleMoves(ChessTeam::Dark, bestMove, bestFigure, true);
+	}
+	else
+	{
+		TMap<AFigureBase*, UBoardCell*> bestMoves;
+		const uint8 boardLimit = 9;
+		for(auto* figure : board->GetAllFigures())
+		{
 			if (!figure)
 			{
 				continue;
 			}
+
+			UBoardCell* boardCell = figure->GetCurrentCell();
+			check(boardCell);
 
 			if (figure->GetTeam() == mAITeam)
 			{
@@ -67,43 +73,44 @@ void UChessAI::ScanBoard(AChessBoard* board)
 				}
 			}
 		}
-	}
 
-	UBoardCell* bestMove = nullptr;
-	AFigureBase* bestFigure = nullptr;
-	float maxValue = FLT_MIN;
-	for (const auto& it : bestMoves)
-	{
-		AFigureBase* currentFigure = it.Key;
-		UBoardCell* currentMove = it.Value;
-
-		AFigureBase* valueFrom = currentMove->GetFigure();
-		if (!valueFrom)
+		float maxValue = FLT_MIN;
+		for (const auto& it : bestMoves)
 		{
-			continue;
+			AFigureBase* currentFigure = it.Key;
+			UBoardCell* currentMove = it.Value;
+
+			AFigureBase* valueFrom = currentMove->GetFigure();
+			if (!valueFrom)
+			{
+				continue;
+			}
+
+			const float figureValue = valueFrom->GetFigureValue();
+			if (figureValue > maxValue)
+			{
+				bestMove = currentMove;
+				bestFigure = currentFigure;
+				maxValue = figureValue;
+			}
 		}
 
-		const float figureValue = valueFrom->GetFigureValue();
-		if (figureValue > maxValue)
+		if (!bestMove && bestMoves.Num() > 0)
 		{
-			bestMove = currentMove;
-			bestFigure = currentFigure;
-			maxValue = figureValue;
+			TArray<AFigureBase*> mKeyArray;
+			bestMoves.GenerateKeyArray(mKeyArray);
+
+			size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
+
+			bestFigure = mKeyArray[randomIndex];
+			bestMove = *bestMoves.Find(bestFigure);
 		}
 	}
 
-	if (!bestMove && bestMoves.Num() > 0)
+	if (bestFigure)
 	{
-		TArray<AFigureBase*> mKeyArray;
-		bestMoves.GenerateKeyArray(mKeyArray);
-
-		size_t randomIndex = UKismetMathLibrary::RandomInteger(bestMoves.Num());
-
-		bestFigure = mKeyArray[randomIndex];
-		bestMove = *bestMoves.Find(bestFigure);
+		bestFigure->LiftUp();
 	}
-
-	bestFigure->LiftUp();
 
 	FTimerDelegate mTimerDel;
 	FTimerHandle mTimerHandle;
@@ -117,10 +124,11 @@ void UChessAI::ScanBoard(AChessBoard* board)
 
 void UChessAI::OnSelectMove(AFigureBase* figure, UBoardCell* cellToMove, AChessBoard* board)
 {
-	check(figure && cellToMove && board);
-
-	figure->MoveTo(cellToMove);
-	cellToMove->SetFigure(figure);
+	if (figure && cellToMove)
+	{
+		figure->MoveTo(cellToMove);
+		cellToMove->SetFigure(figure);
+	}
 
 	auto controller = Cast<APlayerChessController>(GetWorld()->GetFirstPlayerController());
 	check(controller);

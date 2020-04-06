@@ -40,7 +40,6 @@ public:
 	const TPair<uint8, uint8>& GetBoardPosition() const;
 
 private:
-	UPROPERTY()
 	AFigureBase* mCurrentFigure = nullptr;
 
 	TPair<uint8, uint8> mBoardPosition;

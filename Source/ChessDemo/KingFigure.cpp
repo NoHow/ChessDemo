@@ -52,8 +52,13 @@ bool AKingFigure::GetCheckStatus()
 	TPair<uint8, uint8> boardPosition;
 	boardPosition = GetCurrentCell()->GetBoardPosition();
 	
-	for (const auto& figure : figures)
+	for (auto* figure : figures)
 	{
+		if (!figure)
+		{
+			continue;
+		}
+
 		TArray<TPair<int32, int32>> moves;
 		figure->GetPossibleMoves(moves);
 

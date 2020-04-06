@@ -54,6 +54,8 @@ public:
 	bool GetCheckStatus(ChessTeam team);
 
 	void FinishGame(ChessTeam winner) const;
+	bool CheckForPossibleMoves(ChessTeam team);
+	bool CheckForPossibleMoves(ChessTeam team, UBoardCell*& move, AFigureBase*& figure, bool getMove = false);
 
 private:
 	void InitBoard();
@@ -63,7 +65,6 @@ private:
 
 	//Spawn function which intakes bottom left corner position of the board and spawn 2 figures for each team
 	bool AddFigureToBoard(UClass* figureClass, uint8 row, uint8 column, float rotation = 0, bool twoCopies = true);
-	bool CheckForPossibleMoves(ChessTeam team);
 
 private:
 	UPROPERTY(VisibleAnywhere)

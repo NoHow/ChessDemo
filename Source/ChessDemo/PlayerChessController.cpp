@@ -46,12 +46,7 @@ void APlayerChessController::OnFigureClick(AFigureBase* figure)
 
 void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
 {
-    if (mCurrentPlayer != ChessTeam::White)
-    {
-        return;
-    }
-
-    if (m_ActiveFigure)
+    if (m_ActiveFigure && m_ActiveFigure->GetTeam() == ChessTeam::White)
     {
         //If it's not the same try to move there figure
         if (m_ActiveFigure->MoveTo(cell))
@@ -76,7 +71,7 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         }
     }
     //If there are no active figures - make this one active
-    else if(figure)
+    else if(figure && figure->GetTeam() == ChessTeam::White)
     {
         m_ActiveFigure = figure;
         m_ActiveFigure->LiftUp();

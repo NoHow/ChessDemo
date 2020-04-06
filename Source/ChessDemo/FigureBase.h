@@ -93,6 +93,9 @@ protected:
 
 	TArray<TPair<int32, int32>> mCheckDirections;
 
+	static UBoardCell* mPreviousCell;
+	static AFigureBase* mPreviousFigure;
+	static AFigureBase* mKilledFigure;
 private:
 	//True - Dark team, False - White team
 	void SetTeam(ChessTeam newTeam);
@@ -101,9 +104,5 @@ private:
 	void NotifyActorOnInputTouchBegin(const ETouchIndex::Type FingerIndex) override;
 	
 	void ProcessInteraction();
-	
-	static UBoardCell* mPreviousCell;
-	static AFigureBase* mPreviousFigure;
-	static AFigureBase* mKilledFigure;
 };
 	

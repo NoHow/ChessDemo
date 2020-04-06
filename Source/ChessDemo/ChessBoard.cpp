@@ -135,7 +135,7 @@ void AChessBoard::KillFigure(AFigureBase* figure)
 	}
 
 	size_t figureIndex = mFigures.IndexOfByKey(figure);
-	mFigures.RemoveAtSwap(figureIndex);
+	mFigures[figureIndex] = nullptr;
 
 	figure->SetActorLocation(figure->GetActorLocation() - mHideVector, false, nullptr, ETeleportType::ResetPhysics);
 }
@@ -144,7 +144,8 @@ void AChessBoard::RestoreFigure(AFigureBase* figure)
 {
 	check(figure);
 
-	mFigures.Add(figure);
+	size_t figureIndex = mFigures.IndexOfByKey(nullptr);
+	mFigures[figureIndex] = figure;
 	figure->SetActorLocation(figure->GetActorLocation() + mHideVector, false, nullptr, ETeleportType::ResetPhysics);
 }
 
@@ -288,8 +289,20 @@ void AChessBoard::FinishGame(ChessTeam winner) const
 
 bool AChessBoard::CheckForPossibleMoves(ChessTeam team)
 {
-	for (auto& figure : mFigures)
+	UBoardCell* tmpCell;
+	AFigureBase* tmpFig;
+	return CheckForPossibleMoves(team, tmpCell, tmpFig, false);
+}
+
+bool AChessBoard::CheckForPossibleMoves(ChessTeam team, UBoardCell*& cellToMove, AFigureBase*& figureToMove, bool getMove)
+{
+	for (auto* figure : mFigures)
 	{
+		if (!figure)
+		{
+			continue;
+		}
+
 		if (figure->GetTeam() == team)
 		{
 			TArray<TPair<int32, int32>> moves;
@@ -300,9 +313,15 @@ bool AChessBoard::CheckForPossibleMoves(ChessTeam team)
 				UBoardCell* cell = GetCell(TPair<uint8, uint8>(move.Key, move.Value));
 				if (figure->MoveTo(cell))
 				{
+					cell->SetFigure(figure);
 					if (!GetCheckStatus(team))
 					{
 						AFigureBase::CancelMove();
+						if (getMove)
+						{
+							cellToMove = cell;
+							figureToMove = figure;
+						}
 						return true;
 					}
 					AFigureBase::CancelMove();
