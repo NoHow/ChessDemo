@@ -207,51 +207,6 @@ void AFigureBase::SetTeam(ChessTeam newTeam)
 	mCurrentTeam = newTeam;
 }
 
-bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure, bool checkUpdate)
-{
-	if (!mChessBoard)
-	{
-		return false;
-	}
-
-	UBoardCell* checkCell = mChessBoard->GetCell(cellPosition);
-	if (checkCell)
-	{
-		AFigureBase* checkFigure = checkCell->GetFigure();
-		if (checkFigure)
-		{
-			isThereFigure = true;
-			if (checkFigure->GetTeam() == mCurrentTeam)
-			{
-				return false;
-			}
-
-		}
-		else
-		{
-			isThereFigure = false;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-	if (checkUpdate && MakeMove(checkCell))
-	{
-		checkCell->SetFigure(this);
-		bool isCheck = mChessBoard->GetCheckStatus(mCurrentTeam);
-
-		AFigureBase::CancelMove();
-		if (isCheck)
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpdate, uint8 checkLimit)
 {
 	check(mCurrentCell && mChessBoard);
@@ -274,12 +229,24 @@ void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpd
 		while (checkCell && checkCounter++ < checkLimit)
 		{
 			bool isThereFigure = false;
-			if (!CanMoveToCell(checkCellPosition, isThereFigure, checkUpdate))
+			if (!CanMoveToCell(checkCellPosition, isThereFigure))
 			{
 				break;
 			}
 
-			moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+			if (checkUpdate && MakeMove(checkCell))
+			{
+				if (!mChessBoard->GetCheckStatus(mCurrentTeam))
+				{
+					moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+				}
+
+				AFigureBase::CancelMove();
+			}
+			else
+			{
+				moves.Add(TPair<int32, int32>(checkCellPosition.Key, checkCellPosition.Value));
+			}
 
 			if (isThereFigure)
 			{
@@ -292,6 +259,34 @@ void AFigureBase::GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpd
 			checkCell = mChessBoard->GetCell(checkCellPosition);
 		}
 	}
+}
+
+bool AFigureBase::CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure)
+{
+	if (!mChessBoard)
+	{
+		return false;
+	}
+
+	UBoardCell* checkCell = mChessBoard->GetCell(cellPosition);
+	if (checkCell)
+	{
+		AFigureBase* checkFigure = checkCell->GetFigure();
+		if (checkFigure)
+		{
+			isThereFigure = true;
+			if (checkFigure->GetTeam() == mCurrentTeam)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 void AFigureBase::GetPossibleMoves(TArray<TPair<int32, int32>>& moves, bool checkUpdate)

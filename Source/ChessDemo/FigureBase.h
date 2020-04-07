@@ -70,7 +70,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	bool CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure, bool checkUpdate = false);
+	bool CanMoveToCell(TPair<uint8, uint8> cellPosition, bool& isThereFigure);
 	void GetMovesBase(TArray<TPair<int32, int32>>& moves, bool checkUpdate = false, uint8 checkLimit = 255);
 	bool MakeMove(UBoardCell* destinationCell);
 

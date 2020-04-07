@@ -79,22 +79,6 @@ void AChessBoard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	size_t counter = 0; 
-	for (const auto* figure : mFigures)
-	{
-		if (figure)
-		{
-			GEngine->AddOnScreenDebugMessage(counter, 0.1f, FColor::Red,
-				FString::FromInt(counter) + FString(" -> ") + figure->GetName());
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(counter, 0.1f, FColor::Red,
-				FString::FromInt(counter) + FString(" -> ") + FString("NULL"));
-		}
-		
-		counter++;
-	}
 }
 
 void AChessBoard::FillTheBoard()
@@ -109,15 +93,6 @@ void AChessBoard::FillTheBoard()
 	AddFigureToBoard(ABishopFigure::StaticClass(), 1, 3);
 	AddFigureToBoard(AQueenFigure::StaticClass(), 1, 4, 0, false);
 	AddFigureToBoard(AKingFigure::StaticClass(), 1, 5, 0, false);
-
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 1)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 2)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 3)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 4)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 5)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 6)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 7)), ChessTeam::White, 90.f);
-	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 8)), ChessTeam::White, 90.f);
 }
 
 
