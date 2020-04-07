@@ -10,6 +10,7 @@
 class UChessAI;
 class UBoardCell;
 class AChessBoard;
+class APawnFigure;
 
 UCLASS(Blueprintable)
 class CHESSDEMO_API APlayerChessController : public APlayerController
@@ -26,7 +27,15 @@ public:
 
     void SetBoard(AChessBoard* board);
 
+    UFUNCTION(BlueprintCallable, Category="UI")
+    void SetSelectScreen(UUserWidget* widget);
+
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void OnFigureSelect(FigureType type);
+
     void EndTurn();
+
+    void GetPawnPromotion(APawnFigure* figure);
 
     UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Game")
     void FinishChessGame(ChessTeam winner);
@@ -40,4 +49,8 @@ private:
     ChessTeam mCurrentPlayer = ChessTeam::White;
     AChessBoard* mChessBoard = nullptr;
     UChessAI* mAI = nullptr;
+
+    bool mIsMovePaused = false;
+    UUserWidget* mSelectScreen = nullptr;
+    APawnFigure* mReplacementFigure = nullptr;
 };

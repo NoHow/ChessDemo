@@ -27,6 +27,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void ScanBoard(AChessBoard* board);
+	FigureType ChoosePromotion();
 
 private:
 	UFUNCTION()

@@ -17,7 +17,7 @@ enum class ChessTeam : uint8
 	Dark
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class FigureType : uint8
 {
 	Invalid,

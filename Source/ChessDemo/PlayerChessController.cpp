@@ -9,6 +9,8 @@
 #include "Containers/Array.h"
 #include "ChessAI.h"
 #include "ChessBoard.h"
+#include "PawnFigure.h"
+#include "Blueprint/UserWidget.h" 
 
 APlayerChessController::APlayerChessController()
 {
@@ -46,7 +48,7 @@ void APlayerChessController::OnFigureClick(AFigureBase* figure)
 
 void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
 {
-    if (mCurrentPlayer != ChessTeam::White)
+    if (mCurrentPlayer != ChessTeam::White || mIsMovePaused)
     {
         return;
     }
@@ -56,17 +58,14 @@ void APlayerChessController::ProcessClick(UBoardCell* cell, AFigureBase* figure)
         //If it's not the same try to move there figure
         if (m_ActiveFigure->MoveTo(cell))
         {
-            cell->SetFigure(m_ActiveFigure);
-
             m_ActiveFigure = nullptr;
            
-            EndTurn();
-            if (!mIsGameOver)
+            if (!mIsMovePaused)
             {
-                mAI->ScanBoard(mChessBoard);
+                EndTurn();
             }
         }
-        else if (figure)
+        else if (figure && figure->GetTeam() == ChessTeam::White)
         {
             m_ActiveFigure->LiftDown();
             m_ActiveFigure = figure;
@@ -90,8 +89,16 @@ void APlayerChessController::SetBoard(AChessBoard* board)
     mChessBoard = board;
 }
 
+void APlayerChessController::SetSelectScreen(UUserWidget* widget)
+{
+    check(widget);
+    mSelectScreen = widget;
+}
+
 void APlayerChessController::EndTurn()
 {
+    mIsGameOver = mChessBoard->CheckMateUpdate(mCurrentPlayer);
+
     if (mCurrentPlayer == ChessTeam::Dark)
     {
         mCurrentPlayer = ChessTeam::White;
@@ -99,7 +106,37 @@ void APlayerChessController::EndTurn()
     else if(mCurrentPlayer == ChessTeam::White)
     {
         mCurrentPlayer = ChessTeam::Dark;
-    }
 
-    mIsGameOver = mChessBoard->CheckMateUpdate(mCurrentPlayer);
+        if (!mIsGameOver)
+        {
+            mAI->ScanBoard(mChessBoard);
+        }
+    }
+}
+
+void APlayerChessController::GetPawnPromotion(APawnFigure* figure)
+{
+    check(figure);
+    mReplacementFigure = figure;
+
+    FigureType desiredFigure = FigureType::Invalid;
+    if (mCurrentPlayer == ChessTeam::Dark)
+    {
+        OnFigureSelect(mAI->ChoosePromotion());
+    }
+    else if (mCurrentPlayer == ChessTeam::White)
+    {
+        mSelectScreen->SetIsEnabled(true);
+        mSelectScreen->SetRenderOpacity(1.f);
+        mIsMovePaused = true;
+    }
+}
+
+void APlayerChessController::OnFigureSelect(FigureType type)
+{
+    mReplacementFigure->OnReplacementSelect(type);
+    mIsMovePaused = false;
+    EndTurn();
+
+    mReplacementFigure = nullptr;
 }

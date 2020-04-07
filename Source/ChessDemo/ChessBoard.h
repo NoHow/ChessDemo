@@ -56,14 +56,15 @@ public:
 	void FinishGame(ChessTeam winner) const;
 	bool CheckForPossibleMoves(ChessTeam team);
 
+	bool CreateFigure(FigureType figureType, UBoardCell* cell, ChessTeam team, float rotation = 0.f);
+
 private:
 	void InitBoard();
 	void FillTheBoard();
 
-	bool CreateFigure(UClass* figureClass, UBoardCell* cell, ChessTeam team, float rotation = 0.f);
-
 	//Spawn function which intakes bottom left corner position of the board and spawn 2 figures for each team
 	bool AddFigureToBoard(UClass* figureClass, uint8 row, uint8 column, float rotation = 0, bool twoCopies = true);
+	bool CreateFigure(UClass* figureClass, UBoardCell* cell, ChessTeam team, float rotation = 0.f);
 
 private:
 	UPROPERTY(VisibleAnywhere)

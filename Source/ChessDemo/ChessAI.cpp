@@ -120,11 +120,21 @@ void UChessAI::OnSelectMove(AFigureBase* figure, UBoardCell* cellToMove, AChessB
 	if (figure && cellToMove)
 	{
 		figure->MoveTo(cellToMove);
-		cellToMove->SetFigure(figure);
 	}
 
 	auto controller = Cast<APlayerChessController>(GetWorld()->GetFirstPlayerController());
 	check(controller);
 
 	controller->EndTurn();
+}
+
+FigureType UChessAI::ChoosePromotion()
+{
+	TStaticArray<FigureType, 4> possiblePromotions;
+	possiblePromotions[0] = FigureType::Bishop;
+	possiblePromotions[1] = FigureType::Knight;
+	possiblePromotions[2] = FigureType::Queen;
+	possiblePromotions[3] = FigureType::Rook;
+
+	return possiblePromotions[UKismetMathLibrary::RandomIntegerInRange(0, possiblePromotions.Num() - 1u)];
 }

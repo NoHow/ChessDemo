@@ -2,7 +2,7 @@
 
 #include "PawnFigure.h"
 #include "Components/InputComponent.h"
-#include "GameFramework/PlayerController.h"
+#include "PlayerChessController.h"
 #include "Engine/Engine.h" 
 #include "UObject/ConstructorHelpers.h"
 #include "BoardCell.h" 
@@ -108,6 +108,12 @@ bool APawnFigure::MoveTo(UBoardCell* newCell)
 			mFirstMove = false;
 		}
 
+		const auto& newPosition = mCurrentCell->GetBoardPosition();
+		if (newPosition.Key == 1 || newPosition.Key == 8)
+		{
+			auto* controller = Cast<APlayerChessController>(GetWorld()->GetFirstPlayerController());
+			controller->GetPawnPromotion(this);
+		}
 		return true;
 	}	
 	
@@ -164,4 +170,18 @@ bool APawnFigure::CheckCellForFigure(TPair<uint8, uint8> cellPosition) const
 	}
 
 	return false;
+}
+
+void APawnFigure::OnReplacementSelect(FigureType type)
+{
+	mChessBoard->KillFigure(this);
+
+	if (mCurrentTeam == ChessTeam::Dark)
+	{
+		mChessBoard->CreateFigure(type, mCurrentCell, mCurrentTeam, 90.f);
+	}
+	else
+	{
+		mChessBoard->CreateFigure(type, mCurrentCell, mCurrentTeam, -90.f);
+	}
 }

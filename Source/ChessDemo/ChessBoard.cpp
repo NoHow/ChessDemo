@@ -16,6 +16,7 @@
 #include "BoardCell.h"
 #include "PlayerChessController.h"
 #include "Containers/Array.h"
+#include "Engine/Engine.h"
 
 // Sets default values
 AChessBoard::AChessBoard()
@@ -77,6 +78,23 @@ void AChessBoard::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AChessBoard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	size_t counter = 0; 
+	for (const auto* figure : mFigures)
+	{
+		if (figure)
+		{
+			GEngine->AddOnScreenDebugMessage(counter, 0.1f, FColor::Red,
+				FString::FromInt(counter) + FString(" -> ") + figure->GetName());
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(counter, 0.1f, FColor::Red,
+				FString::FromInt(counter) + FString(" -> ") + FString("NULL"));
+		}
+		
+		counter++;
+	}
 }
 
 void AChessBoard::FillTheBoard()
@@ -91,6 +109,15 @@ void AChessBoard::FillTheBoard()
 	AddFigureToBoard(ABishopFigure::StaticClass(), 1, 3);
 	AddFigureToBoard(AQueenFigure::StaticClass(), 1, 4, 0, false);
 	AddFigureToBoard(AKingFigure::StaticClass(), 1, 5, 0, false);
+
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 1)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 2)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 3)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 4)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 5)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 6)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 7)), ChessTeam::White, 90.f);
+	CreateFigure(APawnFigure::StaticClass(), GetCell(TPair<uint8, uint8>(6, 8)), ChessTeam::White, 90.f);
 }
 
 
@@ -135,9 +162,13 @@ void AChessBoard::KillFigure(AFigureBase* figure)
 	}
 
 	size_t figureIndex = mFigures.IndexOfByKey(figure);
-	mFigures[figureIndex] = nullptr;
+	if (figureIndex != INDEX_NONE)
+	{
+		mFigures[figureIndex] = nullptr;
 
-	figure->SetActorLocation(figure->GetActorLocation() - mHideVector, false, nullptr, ETeleportType::ResetPhysics);
+		figure->SetActorLocation(figure->GetActorLocation() - mHideVector, false, nullptr, ETeleportType::ResetPhysics);
+	}
+	
 }
 
 void AChessBoard::RestoreFigure(AFigureBase* figure)
@@ -211,8 +242,18 @@ bool AChessBoard::CreateFigure(UClass* figureClass, UBoardCell* spawnCell, Chess
 	}
 
 	figure->Init(team, spawnCell);
-	figure->SetActorRotation(FRotator{ 0, rotation, 0 }, ETeleportType::TeleportPhysics);
-	mFigures.Add(figure);
+	figure->SetActorRotation(FRotator{ 0, rotation, 0 }, ETeleportType::ResetPhysics);
+
+	int32 index = mFigures.IndexOfByKey(nullptr);
+	if (index == INDEX_NONE)
+	{
+		mFigures.Add(figure);
+	}
+	else
+	{
+		mFigures[index] = figure;
+	}
+	
 
 	if (figure->GetFigureType() == FigureType::King)
 	{
@@ -229,6 +270,37 @@ bool AChessBoard::CreateFigure(UClass* figureClass, UBoardCell* spawnCell, Chess
 	spawnCell->SetFigure(figure);
 	
 	return true;
+}
+
+bool AChessBoard::CreateFigure(FigureType figureType, UBoardCell* cell, ChessTeam team, float rotation)
+{
+	UClass* figure = nullptr;
+	switch (figureType)
+	{
+	case FigureType::Rook:
+		figure = ARookFigure::StaticClass();
+		break;
+	case FigureType::Knight:
+		figure = AKnightFigure::StaticClass();
+		break;
+	case FigureType::Bishop:
+		figure = ABishopFigure::StaticClass();
+		break;
+	case FigureType::Queen:
+		figure = AQueenFigure::StaticClass();
+		break;
+	case FigureType::King:
+		figure = AKingFigure::StaticClass();
+		break;
+	case FigureType::Pawn:
+		figure = APawnFigure::StaticClass();
+		break;
+	default:
+		return false;
+		break;
+	}
+
+	return CreateFigure(figure, cell, team, rotation);
 }
 
 bool AChessBoard::CheckMateUpdate(ChessTeam team)

@@ -68,15 +68,11 @@ UBoardCell* AFigureBase::GetCurrentCell() const
 
 void AFigureBase::Init(ChessTeam team, UBoardCell* cell)
 {
-	if (mChessBoard || team == ChessTeam::Invalid)
-	{
-		return;
-	}
-
+	check(cell);
 	SetTeam(team);
 	SetCurrentCell(cell);
 }
-
+ 
 void AFigureBase::NotifyActorOnClicked(FKey buttonPressed)
 {
 	ProcessInteraction();
@@ -143,6 +139,12 @@ bool AFigureBase::MoveTo(UBoardCell* newCell)
 
 bool AFigureBase::MakeMove(UBoardCell* destinationCell)
 {
+	if (mKilledFigure)
+	{
+		mKilledFigure->Destroy();
+		mKilledFigure = nullptr;
+	}
+
 	AFigureBase* newCellFigure = destinationCell->GetFigure();
 	if (newCellFigure)
 	{
@@ -152,21 +154,14 @@ bool AFigureBase::MakeMove(UBoardCell* destinationCell)
 		}
 		else
 		{
-			if (mKilledFigure)
-			{
-				mKilledFigure->Destroy();
-			}
-
 			mChessBoard->KillFigure(newCellFigure);
 			mKilledFigure = newCellFigure;
 		}
 	}
-	else
-	{
-		mKilledFigure = nullptr;
-	}
 
 	mCurrentCell->SetFigure(nullptr);
+	destinationCell->SetFigure(this);
+
 	mPreviousCell = mCurrentCell;
 	mPreviousFigure = this;
 	mCurrentCell = destinationCell;
