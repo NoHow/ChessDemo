@@ -2,9 +2,10 @@
 
 
 #include "BishopFigure.h"
-#include "UObject/ConstructorHelpers.h"
 #include "ChessBoard.h"
 #include "BoardCell.h" 
+#include "Engine/StaticMesh.h"
+#include "UObject/ConstructorHelpers.h"
 
 ABishopFigure::ABishopFigure()
 {

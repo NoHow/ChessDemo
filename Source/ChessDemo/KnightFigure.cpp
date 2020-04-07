@@ -2,6 +2,7 @@
 
 
 #include "KnightFigure.h"
+#include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "ChessBoard.h"
 #include "BoardCell.h" 

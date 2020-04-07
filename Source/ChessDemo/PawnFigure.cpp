@@ -4,10 +4,11 @@
 #include "Components/InputComponent.h"
 #include "PlayerChessController.h"
 #include "Engine/Engine.h" 
-#include "UObject/ConstructorHelpers.h"
 #include "BoardCell.h" 
 #include "Containers/Array.h"
 #include "ChessBoard.h"
+#include "Engine/StaticMesh.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Sets default values
 APawnFigure::APawnFigure()
